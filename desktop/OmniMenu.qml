@@ -961,6 +961,7 @@ Item {
                         const it = root.filteredItems[root.selectedIndex];
                         if (it) {
                           if (it.isCategory) root.activate(it)
+                          else if (e2.key != Qt.Key_Right) root.activate(it)
                         }
                     }
                     event.accepted = true;
