@@ -849,13 +849,17 @@ Item {
                     } else if (root.query.length > 0) {
                         root.query = "";
                         root.selectedIndex = 0;
-                    } else if (!root.goUp()) {
+                    } else {
                         root.close();
                     }
                     event.accepted = true;
                 } else if (root.quickMode && e2.key === Qt.Key_Left) {
                     root.moveQuickSelection(-1);
                     event.accepted = true;
+                } else if (!root.quickMode && e2.key === Qt.Key_Left) {
+                    if (!root.goUp()) {
+                        root.close();
+                    }
                 } else if (root.quickMode && e2.key === Qt.Key_Right) {
                     root.moveQuickSelection(1);
                     event.accepted = true;
@@ -949,13 +953,15 @@ Item {
                     root.selectedIndex = Math.max(0, root.filteredItems.length - 1);
                     resultListInstance.list.positionViewAtIndex(root.selectedIndex, ListView.End);
                     event.accepted = true;
-                } else if (e2.key === Qt.Key_Return || e2.key === Qt.Key_Enter) {
+                } else if (e2.key === Qt.Key_Return || e2.key === Qt.Key_Enter || e2.key === Qt.Key_Right) {
                     if (root.quickMode) {
                         const t = root.filteredQuickTiles[root.selectedIndex];
                         if (t) root.expandTile(t);
                     } else {
                         const it = root.filteredItems[root.selectedIndex];
-                        if (it) root.activate(it);
+                        if (it) {
+                          if (it.isCategory) root.activate(it)
+                        }
                     }
                     event.accepted = true;
                 } else if (e2.key === Qt.Key_Backspace) {
