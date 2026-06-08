@@ -271,12 +271,12 @@ PanelWindow {
                 id: musicItem
                 readonly property bool present: bar.root.isHorizontal && bar.root.musicTitle.length > 0
                 readonly property string displayTitle: {
-                    if (bar.root.musicArtist.length > 0) return bar.root.musicTitle;
+                    if (bar.root.musicArtist.length > 0) return bar.root.musicTitle + " ";
                     var idx = bar.root.musicTitle.lastIndexOf(" - ");
                     return idx > 0 ? bar.root.musicTitle.substring(0, idx) : bar.root.musicTitle;
                 }
                 readonly property string displayArtist: {
-                    if (bar.root.musicArtist.length > 0) return bar.root.musicArtist;
+                    if (bar.root.musicArtist.length > 0) return bar.root.musicArtist + " ";
                     var idx = bar.root.musicTitle.lastIndexOf(" - ");
                     return idx > 0 ? bar.root.musicTitle.substring(idx + 3) : "";
                 }
