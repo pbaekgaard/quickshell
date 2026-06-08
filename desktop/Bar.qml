@@ -216,185 +216,11 @@ PanelWindow {
             }
         }
 
-        // Now-playing pill, anchored to the bar's right edge so it sits
-        // outside (to the right of) the system-icons cluster. The
-        // GridLayout reserves room for it via an enlarged rightMargin when
-        // visible so the icons stop short and don't overlap.
-        Item {
-            id: musicItem
-            // `present` is the logical "show the pill" state; the item lingers
-            // a beat past it (openW > 0.5) so the closing slide can finish
-            // before it leaves the layout.
-            readonly property bool present: bar.root.isHorizontal && bar.root.musicTitle.length > 0
-            // Some players pack "Title - Artist" into the title field with an
-            // empty artist.  Parse it out so the vertical reveal still works.
-            readonly property string displayTitle: {
-                if (bar.root.musicArtist.length > 0) return bar.root.musicTitle;
-                var idx = bar.root.musicTitle.lastIndexOf(" - ");
-                return idx > 0 ? bar.root.musicTitle.substring(0, idx) : bar.root.musicTitle;
-            }
-            readonly property string displayArtist: {
-                if (bar.root.musicArtist.length > 0) return bar.root.musicArtist;
-                var idx = bar.root.musicTitle.lastIndexOf(" - ");
-                return idx > 0 ? bar.root.musicTitle.substring(idx + 3) : "";
-            }
-            // Natural pill width (icon + label + 12px padding). The +8 folds
-            // in the gap to the icon cluster so the reservation below tracks a
-            // single animated number — no 8px snap when the pill maps/unmaps.
-            readonly property real contentW: Math.max(titleText.implicitWidth, artistText.implicitWidth) + 15 + musicIcon.implicitWidth
-            readonly property real maxPillWidth: 200
-            property real openW: present ? Math.min(contentW + 8, maxPillWidth) : 0
-            // One Behavior drives all three motions: slide open on track
-            // start, ease between widths on a title change, slide shut on
-            // stop. 220ms OutCubic — a short, settled glide.
-            Behavior on openW { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
-
-            visible: present || openW > 0.5
-            anchors.right: parent.right
-            anchors.rightMargin: bar.cloudMode ? bar.cloudAir + bar.cloudPad + 2 : 10
-            anchors.verticalCenter: parent.verticalCenter
-            // Match the -1 optical lift applied to icons / clock so the
-            // pill sits on the same baseline as the rest of the bar row.
-            anchors.verticalCenterOffset: -1
-            height: 16
-            width: openW
-            z: 10
-
-            readonly property string tipText: musicItem.displayArtist.length > 0
-                                              ? musicItem.displayTitle + " - " + musicItem.displayArtist
-                                              : musicItem.displayTitle
-
-            Rectangle {
-                id: musicPill
-                // Pinned to the right edge so the pill grows leftward as the
-                // item widens; the 8px gap to the icon cluster sits to its
-                // left. clip masks the centred row to the animating width so
-                // the open reads as the pill inflating, not text spilling out.
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                width: Math.max(0, parent.width - 8)
-                height: parent.height
-                radius: height / 2
-                color: bar.root.accent
-                clip: true
-                opacity: musicMouse.containsMouse ? 1.0 : 0.9
-                Behavior on opacity { NumberAnimation { duration: 180 } }
-
-                Item {
-                    id: textClip
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left
-                    anchors.leftMargin: 5 + musicIcon.implicitWidth + 5
-                    anchors.right: parent.right
-                    anchors.rightMargin: 5
-                    height: parent.height
-                    clip: true
-
-                    readonly property bool hasArtist: musicItem.displayArtist.length > 0
-                    property bool showTitle: true
-                    property real slideY: 0
-
-                    NumberAnimation {
-                        id: slideAnim
-                        target: textClip
-                        property: "slideY"
-                        duration: 400
-                        easing.type: Easing.InOutQuad
-                    }
-
-                    Timer {
-                        interval: 3500
-                        running: textClip.hasArtist
-                        repeat: true
-                        onTriggered: {
-                            textClip.showTitle = !textClip.showTitle;
-                            slideAnim.to = textClip.showTitle ? 0 : -16;
-                            slideAnim.start();
-                        }
-                    }
-
-                    Item {
-                        x: 0
-                        y: textClip.slideY
-                        width: textClip.width
-                        height: 16
-                        Text {
-                            id: titleText
-                            anchors.centerIn: parent
-                            text: musicItem.displayTitle
-                            color: bar.root.paper
-                            font.family: bar.root.mono
-                            font.pixelSize: 10
-                            font.weight: Font.Medium
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                    }
-
-                    Item {
-                        x: 0
-                        y: textClip.slideY + 16
-                        width: textClip.width
-                        height: 16
-                        Text {
-                            id: artistText
-                            anchors.centerIn: parent
-                            text: musicItem.displayArtist
-                            color: bar.root.paper
-                            font.family: bar.root.mono
-                            font.pixelSize: 10
-                            font.weight: Font.Normal
-                            horizontalAlignment: Text.AlignHCenter
-                            opacity: 0.75
-                        }
-                    }
-                }
-            }
-
-            Text {
-                id: musicIcon
-                anchors.verticalCenter: musicPill.verticalCenter
-                anchors.left: musicPill.left
-                anchors.leftMargin: 5
-                text: bar.root.icoMusic
-                color: bar.root.paper
-                font.family: bar.root.mono
-                font.pixelSize: 9
-                z: 1
-            }
-
-            Timer {
-                id: musicTipDelay
-                interval: 320
-                onTriggered: {
-                    const p = musicItem.mapToItem(null, musicItem.width / 2, musicItem.height / 2);
-                    bar.root.showTooltip(musicItem.tipText, p.x, p.y);
-                }
-            }
-
-            MouseArea {
-                id: musicMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                cursorShape: Qt.PointingHandCursor
-                onEntered: musicTipDelay.restart()
-                onExited:  { musicTipDelay.stop(); bar.root.hideTooltip(musicItem.tipText); }
-                onClicked: (e) => {
-                    musicTipDelay.stop();
-                    bar.root.hideTooltip(musicItem.tipText);
-                    if (e.button === Qt.RightButton)       bar.root.musicNext();
-                    else if (e.button === Qt.MiddleButton) bar.root.musicPrev();
-                    else                                    bar.root.musicToggle();
-                }
-            }
-        }
-
         GridLayout {
             anchors.fill: parent
             anchors.leftMargin:   bar.root.isHorizontal ? (bar.cloudMode ? bar.cloudAir + bar.cloudPad : 10) : 0
             anchors.rightMargin:  bar.root.isHorizontal
-                                  ? ((bar.cloudMode ? bar.cloudAir + bar.cloudPad : 10)
-                                     + musicItem.openW)
+                                  ? (bar.cloudMode ? bar.cloudAir + bar.cloudPad : 10)
                                   : 0
             anchors.topMargin:    bar.root.isHorizontal
                                   ? (bar.cloudMode
@@ -435,6 +261,161 @@ PanelWindow {
                     active: bar.root.activeWs === (index + 1)
                     present: bar.root.existingWs.indexOf(index + 1) !== -1
                     onActivated: bar.root.run("hyprctl dispatch workspace " + (index + 1))
+                }
+            }
+
+            Separator { root: bar.root }
+
+            // Now-playing pill, to the right of workspace indicators.
+            Item {
+                id: musicItem
+                readonly property bool present: bar.root.isHorizontal && bar.root.musicTitle.length > 0
+                readonly property string displayTitle: {
+                    if (bar.root.musicArtist.length > 0) return bar.root.musicTitle;
+                    var idx = bar.root.musicTitle.lastIndexOf(" - ");
+                    return idx > 0 ? bar.root.musicTitle.substring(0, idx) : bar.root.musicTitle;
+                }
+                readonly property string displayArtist: {
+                    if (bar.root.musicArtist.length > 0) return bar.root.musicArtist;
+                    var idx = bar.root.musicTitle.lastIndexOf(" - ");
+                    return idx > 0 ? bar.root.musicTitle.substring(idx + 3) : "";
+                }
+                readonly property real contentW: Math.max(titleText.implicitWidth, artistText.implicitWidth) + 15 + musicIcon.implicitWidth
+                readonly property real maxPillWidth: 200
+                property real openW: present ? Math.min(contentW + 8, maxPillWidth) : 0
+                Behavior on openW { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+
+                visible: present || openW > 0.5
+                Layout.preferredWidth: openW
+                Layout.preferredHeight: 16
+                Layout.alignment: Qt.AlignVCenter
+                Layout.leftMargin: 8
+                height: 16
+                width: openW
+                z: 10
+
+                readonly property string tipText: musicItem.displayArtist.length > 0
+                                                  ? musicItem.displayTitle + " - " + musicItem.displayArtist
+                                                  : musicItem.displayTitle
+
+                Rectangle {
+                    id: musicPill
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Math.max(0, parent.width)
+                    height: parent.height
+                    radius: height / 2
+                    color: bar.root.accent
+                    clip: true
+                    opacity: musicMouse.containsMouse ? 1.0 : 0.9
+                    Behavior on opacity { NumberAnimation { duration: 180 } }
+
+                    Item {
+                        id: textClip
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: parent.left
+                        anchors.leftMargin: 5 + musicIcon.implicitWidth + 5
+                        anchors.right: parent.right
+                        anchors.rightMargin: 5
+                        height: parent.height
+                        clip: true
+
+                        readonly property bool hasArtist: musicItem.displayArtist.length > 0
+                        property bool showTitle: true
+                        property real slideY: 0
+
+                        NumberAnimation {
+                            id: slideAnim
+                            target: textClip
+                            property: "slideY"
+                            duration: 400
+                            easing.type: Easing.InOutQuad
+                        }
+
+                        Timer {
+                            interval: 3500
+                            running: textClip.hasArtist
+                            repeat: true
+                            onTriggered: {
+                                textClip.showTitle = !textClip.showTitle;
+                                slideAnim.to = textClip.showTitle ? 0 : -16;
+                                slideAnim.start();
+                            }
+                        }
+
+                        Item {
+                            x: 0
+                            y: textClip.slideY
+                            width: textClip.width
+                            height: 16
+                            Text {
+                                id: titleText
+                                anchors.centerIn: parent
+                                text: musicItem.displayTitle
+                                color: bar.root.paper
+                                font.family: bar.root.mono
+                                font.pixelSize: 10
+                                font.weight: Font.Medium
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+                        }
+
+                        Item {
+                            x: 0
+                            y: textClip.slideY + 16
+                            width: textClip.width
+                            height: 16
+                            Text {
+                                id: artistText
+                                anchors.centerIn: parent
+                                text: musicItem.displayArtist
+                                color: bar.root.paper
+                                font.family: bar.root.mono
+                                font.pixelSize: 10
+                                font.weight: Font.Normal
+                                horizontalAlignment: Text.AlignHCenter
+                                opacity: 0.75
+                            }
+                        }
+                    }
+                }
+
+                Text {
+                    id: musicIcon
+                    anchors.verticalCenter: musicPill.verticalCenter
+                    anchors.left: musicPill.left
+                    anchors.leftMargin: 5
+                    text: bar.root.icoMusic
+                    color: bar.root.paper
+                    font.family: bar.root.mono
+                    font.pixelSize: 9
+                    z: 1
+                }
+
+                Timer {
+                    id: musicTipDelay
+                    interval: 320
+                    onTriggered: {
+                        const p = musicItem.mapToItem(null, musicItem.width / 2, musicItem.height / 2);
+                        bar.root.showTooltip(musicItem.tipText, p.x, p.y);
+                    }
+                }
+
+                MouseArea {
+                    id: musicMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                    cursorShape: Qt.PointingHandCursor
+                    onEntered: musicTipDelay.restart()
+                    onExited:  { musicTipDelay.stop(); bar.root.hideTooltip(musicItem.tipText); }
+                    onClicked: (e) => {
+                        musicTipDelay.stop();
+                        bar.root.hideTooltip(musicItem.tipText);
+                        if (e.button === Qt.RightButton)       bar.root.musicNext();
+                        else if (e.button === Qt.MiddleButton) bar.root.musicPrev();
+                        else                                    bar.root.musicToggle();
+                    }
                 }
             }
 
