@@ -401,20 +401,36 @@ PanelWindow {
                     }
                 }
 
+                Timer {
+                    id: musicScrollDebounce
+                    interval: 200
+                    property bool scrollUp: false
+                    onTriggered: {
+                        if (scrollUp) bar.root.musicNext();
+                        else          bar.root.musicPrev();
+                    }
+                }
+
                 MouseArea {
                     id: musicMouse
                     anchors.fill: parent
                     hoverEnabled: true
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
                     cursorShape: Qt.PointingHandCursor
                     onEntered: musicTipDelay.restart()
                     onExited:  { musicTipDelay.stop(); bar.root.hideTooltip(musicItem.tipText); }
+                    onWheel: (e) => {
+                        if (e.angleDelta.y === 0) return;
+                        musicTipDelay.stop();
+                        bar.root.hideTooltip(musicItem.tipText);
+                        musicScrollDebounce.scrollUp = e.angleDelta.y > 0;
+                        musicScrollDebounce.restart();
+                    }
                     onClicked: (e) => {
                         musicTipDelay.stop();
                         bar.root.hideTooltip(musicItem.tipText);
-                        if (e.button === Qt.RightButton)       bar.root.musicNext();
-                        else if (e.button === Qt.MiddleButton) bar.root.musicPrev();
-                        else                                    bar.root.musicToggle();
+                        if (e.button === Qt.RightButton) bar.root.musicToggle();
+                        else                              bar.root.run("hyprctl dispatch togglespecialworkspace music");
                     }
                 }
             }

@@ -1895,6 +1895,9 @@ Item {
     function musicPrev() {
         if (root.musicPlayer && root.musicPlayer.canGoPrevious) root.musicPlayer.previous();
     }
+    function musicOpen() {
+        if (root.musicPlayer && root.musicPlayer.canRaise) root.musicPlayer.raise();
+    }
 
     Item {
         visible: false
