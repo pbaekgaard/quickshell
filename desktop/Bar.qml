@@ -606,6 +606,14 @@ PanelWindow {
                 onActivated: bar.root.run("omarchy-menu power")
             }
 
+            Module {
+                root: bar.root
+                glyph: bar.root.kbLayout.replace(/ .*/, "").substring(0, 2).toUpperCase()
+                tooltip: bar.root.kbLayout
+                fontSize: 12
+                onActivated: bar.root.run("hyprctl switchxkblayout all next")
+            }
+
             // Module {
             //    root: bar.root
             //    glyph: bar.root.edgeArrow()

@@ -181,6 +181,8 @@ Item {
     // Instantaneous power draw in watts; magnitude only — direction is in batState.
     property real batPower: 0
 
+    property string kbLayout: ""
+
     property string netIcon: "󰤯"
     property string netKind: "none"   // "eth" | "wifi" | "none"
     property string wifiSsid: ""
@@ -1096,6 +1098,25 @@ Item {
     }
     Timer { interval: 1000; running: true; repeat: true; triggeredOnStart: true
         onTriggered: { tel.running = false; tel.running = true; } }
+
+    // ---------- Keyboard layout (2 Hz) ----------
+    Process {
+        id: kbProbe
+        running: false
+        command: ["bash", "-lc",
+            "hyprctl devices -j 2>/dev/null | python3 -c "
+            + "\"import sys,json; d=json.load(sys.stdin); ks=[k for k in d.get('keyboards',[]) if k.get('main',False)]; "
+            + "k=ks[0] if ks else d.get('keyboards',[{}])[0]; print(k.get('active_keymap','?'))\""
+            + " || echo '?'"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const t = this.text.trim();
+                if (t.length > 0 && t !== "?") root.kbLayout = t;
+            }
+        }
+    }
+    Timer { interval: 100; running: true; repeat: true; triggeredOnStart: true
+        onTriggered: { kbProbe.running = false; kbProbe.running = true; } }
 
     // ---------- Workspaces (2 Hz) ----------
     Process {
