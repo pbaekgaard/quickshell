@@ -722,6 +722,7 @@ Item {
     // Bind in Hyprland with:
     //   bind = SUPER, SPACE, global, quickshell:palette-toggle
     //   bind = ALT,   SPACE, global, quickshell:palette-quick
+    //   bind = ALT,   A,     global, quickshell:palette-apps
     GlobalShortcut {
         appid: "quickshell"
         name: "palette-toggle"
@@ -733,6 +734,12 @@ Item {
         name: "palette-quick"
         description: "Open omni-menu pivoted to Quick"
         onPressed: { root.open(); root.categoryFilter = "Quick"; }
+    }
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "palette-apps"
+        description: "Open omni-menu pivoted to Apps"
+        onPressed: { root.open(); root.categoryFilter = "App"; }
     }
 
     // ---------- Panel ----------

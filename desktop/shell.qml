@@ -13,6 +13,7 @@ import Quickshell
 // process directly (no `qs` client fork on the hot path):
 //   bind = SUPER, SPACE, global, quickshell:palette-toggle
 //   bind = ALT,   SPACE, global, quickshell:palette-quick
+//   bind = ALT,   A,     global, quickshell:palette-apps
 ShellRoot {
     id: root
 

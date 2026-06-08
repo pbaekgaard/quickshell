@@ -29,14 +29,14 @@ Item {
         }
     }
 
-    // NumberAnimation {
-    //     id: slideHome
-    //     target: kanji
-    //     properties: "slideX,slideY"
-    //     to: 0
-    //     duration: 180
-    //     easing.type: Easing.OutCubic
-    // }
+    NumberAnimation {
+        id: slideHome
+        target: kanji
+        properties: "slideX,slideY"
+        to: 0
+        duration: 0
+        easing.type: Easing.OutCubic
+    }
 
     Bloom { id: bloom; root: wsCell.root }
 
@@ -53,11 +53,10 @@ Item {
         color: wsCell.active ? wsCell.root.seal : (wsCell.present ? wsCell.root.ink : wsCell.root.inkDeep)
         opacity: wsCell.active ? 1.0 : (wsCell.present ? 0.75 : 0.35)
         font.family: wsCell.root.mono
-        font.pixelSize: wsCell.active ? 12 : 12
+        font.pixelSize: 12
         font.weight: wsCell.active ? Font.ExtraBold : Font.Light
-        Behavior on color { ColorAnimation { duration: 120 } }
-        Behavior on opacity { NumberAnimation { duration: 120 } }
-        Behavior on font.pixelSize { NumberAnimation { duration: 120 } }
+        Behavior on color { ColorAnimation { duration: 0 } }
+        Behavior on opacity { NumberAnimation { duration: 0 } }
     }
 
     MouseArea {

@@ -1122,7 +1122,7 @@ Item {
             }
         }
     }
-    Timer { interval: 500; running: true; repeat: true; triggeredOnStart: true
+    Timer { interval: 33; running: true; repeat: true; triggeredOnStart: true
         onTriggered: { wsProbe.running = false; wsProbe.running = true; } }
 
     // ---------- Network status ----------
